@@ -1,0 +1,18 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Divvun.PkgMgr.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="RegistryId" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">DivvunPkgMgr</Value>
+    </Setting>
+    <Setting Name="Repository" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://192.168.0.17:8000</Value>
+    </Setting>
+    <Setting Name="UpdateCheckInterval" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Daily</Value>
+    </Setting>
+    <Setting Name="Channel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Stable</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

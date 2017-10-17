@@ -1,0 +1,40 @@
+﻿<Window x:Class="Divvun.PkgMgr.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Divvun.PkgMgr"
+        mc:Ignorable="d"
+        Title="{x:Static local:Strings.settings}" Height="320" Width="640" Background="{DynamicResource {x:Static SystemColors.MenuBrushKey}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="32" />
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="16">
+            <Label Name="lblLanguage" Content="{x:Static local:Strings.interfaceLanguage}" Target="{Binding ElementName=ddlLanguage}" />
+            <ComboBox Name="ddlLanguage" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem IsSelected="True">English</ComboBoxItem>
+            </ComboBox>
+            
+            <Label Name="lblUpdateFreq" Content="{x:Static local:Strings.updateFrequency}" Target="{Binding ElementName=ddlUpdateFreq}" />
+            <ComboBox Name="ddlUpdateFreq" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem IsSelected="True">Daily</ComboBoxItem>
+            </ComboBox>
+
+            <Label Name="lblUpdateChannel" Content="{x:Static local:Strings.updateChannel}" Target="{Binding ElementName=ddlUpdateChannel}" />
+            <ComboBox Name="ddlUpdateChannel" Width="160" HorizontalAlignment="Left">
+                <ComboBoxItem IsSelected="True">Stable</ComboBoxItem>
+            </ComboBox>
+
+            <Label Name="lblRepoUri" Content="{x:Static local:Strings.repository}" Target="{Binding ElementName=txtRepoUri}" />
+            <TextBox Name="txtRepoUri" Height="23" HorizontalAlignment="Left" VerticalContentAlignment="Center" Width="256" />
+
+        </StackPanel>
+        <DockPanel Grid.Row="1" Background="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Name="btnCancel" Click="btnCancel_Click" Content="{x:Static local:Strings.cancel}" Width="50" Height="23" Margin="10,0,8,0" Padding="4,0,4,0" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <Button DockPanel.Dock="Right" Name="btnSave" Click="btnSave_Click" Content="{x:Static local:Strings.save}" Width="50" Height="23" Margin="10,0,0,0" Padding="4,0,4,0" HorizontalAlignment="Right" VerticalAlignment="Center" />
+        </DockPanel>
+        <!--<Label Content="{x:Static local:Strings.updateFrequency}" />-->
+    </Grid>
+</Window>
