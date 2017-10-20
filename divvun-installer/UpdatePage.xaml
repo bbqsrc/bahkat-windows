@@ -20,7 +20,7 @@
         </Grid.RowDefinitions>
         <TreeView Grid.Row="0" x:Name="TreeView" Grid.ColumnSpan="2">
             <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Items}" DataType="{x:Type local:MenuItem}">
+                <HierarchicalDataTemplate ItemsSource="{Binding Items}" DataType="{x:Type local:PackageMenuItem}">
                     <TextBlock Text="{Binding Title}" />
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>

@@ -109,6 +109,7 @@
     <Compile Include="AppCoordinator.cs" />
     <Compile Include="Bahkat\Bahkat.cs" />
     <Compile Include="Bahkat\Class1.cs" />
+    <Compile Include="Util.cs" />
     <Compile Include="FileDownloader.cs" />
     <Compile Include="Models\SoftwarePackage.cs" />
     <Compile Include="SettingsWindow.xaml.cs">

@@ -44,8 +44,8 @@ namespace Divvun.PkgMgr
                     RegKey.SetValue(UpdateCheckIntervalKey, interval);
                 });
 
-
-            // Store.Register(Store.State.SelectedPackages);
+            Observable.FromEventPattern<NotifyCollectionChangedEventArgs>(Store.State.SelectedPackages, "CollectionChanged")
+                .Subscribe(_ => Store.ForceRefresh());
         }
     }
 
@@ -106,30 +106,32 @@ namespace Divvun.PkgMgr
         }
     }
 
-    public class ObservableStore<T> where T : class
+    public class ObservableStore<TState> where TState : class
     {
-        public T State { get; private set; }
-        private BehaviorSubject<T> subject = new BehaviorSubject<T>(null);
+        public TState State { get; private set; }
+        private BehaviorSubject<TState> subject = new BehaviorSubject<TState>(null);
 
-        public ObservableStore(T state)
+        public ObservableStore(TState state)
         {
             var generator = new ProxyGenerator();
-            var proxy = generator.CreateClassProxyWithTarget(state, new StateInterceptor<T>(subject));
+            var proxy = generator.CreateClassProxyWithTarget(state, new StateInterceptor<TState>(subject));
             subject.OnNext(proxy);
             State = proxy;
         }
 
-        public IObservable<T> Observe()
+        public IObservable<TState> Observe()
         {
             return subject;
         }
 
-        public void Register(INotifyCollectionChanged obj)
+        public void ForceRefresh()
         {
-            Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                x => obj.CollectionChanged += x,
-                x => obj.CollectionChanged -= x)
-                .Subscribe(_ => subject.OnNext(State));
+            subject.OnNext(State);
+        }
+
+        public void Register<T>(IObservable<T> obj)
+        {
+            obj.Subscribe(_ => subject.OnNext(State));
         }
     }
 

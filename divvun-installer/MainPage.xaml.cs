@@ -16,9 +16,47 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Globalization;
 
 namespace Divvun.PkgMgr
 {
+    abstract class ModelFilter : IValueConverter
+    {
+        abstract protected object ProcessModel(PackageIndex model);
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (DependencyProperty.UnsetValue == value)
+            {
+                return value;
+            }
+            return ProcessModel((PackageIndex)value);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    class CategoryFilter : ModelFilter
+    {
+        override protected object ProcessModel(PackageIndex model)
+        {
+            return model.Category;
+        }
+    }
+
+    class LanguageFilter : ModelFilter
+    {
+        override protected object ProcessModel(PackageIndex model)
+        {
+            return model.Languages
+                .Select(tag => new CultureInfo(tag).DisplayName)
+                .ToList();
+        }
+    }
+
     /// <summary>
     /// Interaction logic for Page1.xaml
     /// </summary>
@@ -28,8 +66,35 @@ namespace Divvun.PkgMgr
         {
             InitializeComponent();
 
+            BindPrimaryButton();
+            BindPackageList();
+        }
+
+        private void BindPrimaryButton()
+        {
+            App.Store.Observe()
+                .SubscribeOnDispatcher()
+                .ObserveOnDispatcher()
+                .Select(state => state.SelectedPackages)
+                .Subscribe(packages =>
+                {
+                    if (packages.Count > 0)
+                    {
+                        btnPrimary.IsEnabled = true;
+                        btnPrimary.Content = "Install " + packages.Count + " Packages";
+                    }
+                    else
+                    {
+                        btnPrimary.IsEnabled = false;
+                        btnPrimary.Content = "No Packages Selected";
+                    }
+                });
+        }
+
+        private void BindPackageList()
+        {
             Repository repoLoading;
-            
+
             App.Store.Observe()
                 .SubscribeOnDispatcher()
                 .ObserveOnDispatcher()
@@ -60,9 +125,10 @@ namespace Divvun.PkgMgr
                             switch (filter)
                             {
                                 case "category":
-                                    // throw new NotSupportedException();
+                                    FilterBy<CategoryFilter>(packages);
+                                    break;
                                 case "language":
-                                    FilterByLanguage(packages);
+                                    FilterBy<LanguageFilter>(packages);
                                     break;
                             }
                             break;
@@ -70,118 +136,78 @@ namespace Divvun.PkgMgr
                             break;
                     }
                 });
-
-         
         }
 
-        private void FilterByLanguage(List<PackageIndex> packages)
+        private void FilterBy<T>(List<PackageIndex> packages) where T : class, IValueConverter, new()
         {
-            var languages = new Dictionary<string, List<PackageIndex>>();
+            var pkgs = packages.Select(x => new PackageMenuItem(x)).ToList();
+            lvPackages.ItemsSource = pkgs;
 
-            foreach (var package in packages)
-            {
-                foreach (var lang in package.Languages)
-                {
-                    if (!languages.ContainsKey(lang))
-                    {
-                        languages.Add(lang, new List<PackageIndex>());
-                    }
-                    languages[lang].Add(package);
-                }
-            }
-
-            var cats = new ObservableCollection<MenuCategory>();
-
-            foreach (var entry in languages)
-            {
-                var cat = new MenuCategory()
-                {
-                    Title = entry.Key
-                };
-                
-                foreach (var item in entry.Value)
-                {
-                    cat.Items.Add(new MenuItem()
-                    {
-                        Title = item.Name["en"],
-                        RawFileSize = 12345678,
-                        Version = item.Version
-                    });
-                }
-
-                cats.Add(cat);
-            }
-
-            tvPackages.ItemsSource = cats;
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(lvPackages.ItemsSource);
+            PropertyGroupDescription groupDescription = new PropertyGroupDescription("Model", new T());
+            view.GroupDescriptions.Add(groupDescription);
         }
 
-        private void btnPrimary_Click(object sender, RoutedEventArgs e)
+        private void btnMenu_Click(object sender, RoutedEventArgs e)
         {
-            //this.NavigationService.Navigate(new UpdatePage());
-            //this.NavigationService.RemoveBackEntry();
-        }
-
-        private void tvPackages_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (tvPackages.SelectedItem is MenuItem)
-            {
-                var item = (MenuItem)tvPackages.SelectedItem;
-
-                item.IsSelected = !item.IsSelected;
+            if (btnMenu.ContextMenu.IsOpen) {
+                btnMenu.ContextMenu.IsOpen = false;
+                return;
             }
+
+            btnMenu.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            btnMenu.ContextMenu.PlacementTarget = btnMenu;
+            btnMenu.ContextMenu.IsOpen = true;
         }
     }
 
-    public class MenuCategory
+    public class PackageMenuItem
     {
-        public MenuCategory()
+        public PackageIndex Model { get; private set; }
+
+        public PackageMenuItem(PackageIndex model)
         {
-            this.Items = new ObservableCollection<MenuItem>();
+            Model = model;
         }
 
-        public string Title { get; set; }
+        public string Title => Model.Name["en"];
+        public string Version => Model.Version;
+        public string Meta => Version + " (" + FileSize + ")";
+        public string Status => "Not Installed";
 
-        public ObservableCollection<MenuItem> Items { get; set; }
-    }
-
-    public class MenuItem
-    {
-        private static String BytesToString(UInt64 bytes)
-        {
-            string[] suf = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
-            if (bytes == 0)
-            {
-                return "0 " + suf[0];
-            }
-            Int32 place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1024)));
-            Double num = Math.Round(bytes / Math.Pow(1024, place), 2);
-            return num.ToString() + " " + suf[place];
-        }
-
-        public string Title { get; set; }
-        public UInt64 RawFileSize { get; set; }
         public string FileSize
         {
             get
             {
-                return BytesToString(RawFileSize);
+                if (Model.Installer != null)
+                {
+                    return Util.BytesToString(Model.Installer.Value.InstalledSize);
+                }
+                return "N/A";
             }
         }
-        public string Version { get; set; }
-        public string Meta
+
+        public bool IsSelected
         {
             get
             {
-                return Version + " (" + FileSize + ")";
+                return App.Store.State.SelectedPackages.Contains(Model);
             }
-        }
-        public string Status
-        {
-            get
+        
+            set
             {
-                return "Not Installed";
+                if (value)
+                {
+                    if (!App.Store.State.SelectedPackages.Contains(Model))
+                    {
+                        App.Store.State.SelectedPackages.Add(Model);
+                    }
+                }
+                else
+                {
+                    App.Store.State.SelectedPackages.Remove(Model);
+                }
             }
         }
-        public bool IsSelected { get; set; }
     }
 }

@@ -62,8 +62,8 @@ namespace Divvun.PkgMgr.Bahkat
         public Uri Url;
         public string SilentArgs;
         public string Guid;
-        public long Size;
-        public long InstalledSize;
+        public ulong Size;
+        public ulong InstalledSize;
         public PackageIndexInstallerSignature? Signature;
     }
 
